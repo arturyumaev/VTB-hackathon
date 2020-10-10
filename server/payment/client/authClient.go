@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"github.com/rs/zerolog"
 	"io/ioutil"
@@ -17,7 +18,10 @@ type AuthClient struct {
 }
 
 func NewAuthClient(urlToken string, secret string, logger *zerolog.Logger) (*AuthClient, error) {
-	client := &http.Client{}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}
+	client := &http.Client{Transport: tr}
 	return &AuthClient{
 		client:   client,
 		urlToken: urlToken,
@@ -43,8 +47,7 @@ func (a *AuthClient) CheckAndInvalidateToken(accessToken string, scope []string)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := a.client.Do(req)
 	if err != nil {
 		return false, err
 	}

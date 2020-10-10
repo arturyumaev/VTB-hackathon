@@ -35,6 +35,9 @@ func NewHandlerFunc(service *service.Service, jwtKey string, internalSecret stri
 }
 
 func (h *HandlerFuncs) ProfileHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	var cookie, err = r.Cookie("refreshToken")
 	if err != nil || len(cookie.Value) == 0 {
 		writeResponse(w, "no auth", http.StatusUnauthorized)
@@ -65,12 +68,15 @@ func (h *HandlerFuncs) ProfileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HandlerFuncs) LoginYandexHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	data := url.Values{}
 	data.Set("response_type", "code")
 	data.Set("client_id", h.yandexClientId)
 	loginURL := h.service.GetConfig("yandex_code") + data.Encode()
 	redirect := r.URL.Query().Get("redirect_uri")
-	cookieReferer := http.Cookie{Name: "redirectUri", Value: redirect, Path: "/"}
+	cookieReferer := http.Cookie{Name: "redirectUri", Value: redirect, MaxAge: 6000, Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteNoneMode}
 	http.SetCookie(w, &cookieReferer)
 
 	w.Header().Set("Location", loginURL)
@@ -79,6 +85,9 @@ func (h *HandlerFuncs) LoginYandexHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (h *HandlerFuncs) LoginSelfHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	decoder := json.NewDecoder(r.Body)
 	var loginReq domain.LoginRequest
 	err := decoder.Decode(&loginReq)
@@ -96,12 +105,25 @@ func (h *HandlerFuncs) LoginSelfHandler(w http.ResponseWriter, r *http.Request) 
 		errorResponse(w, err, http.StatusInternalServerError)
 		return
 	}
-	cookieSession := http.Cookie{Name: "refreshToken", Value: refreshToken, Path: "/"}
+	cookieSession := http.Cookie{Name: "refreshToken", Value: refreshToken, MaxAge: 6000, Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteNoneMode}
+	http.SetCookie(w, &cookieSession)
+	writeResponse(w, "OK", http.StatusOK)
+}
+
+func (h *HandlerFuncs) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+
+	cookieSession := http.Cookie{Name: "refreshToken", Value: "", MaxAge: 0, Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteNoneMode}
 	http.SetCookie(w, &cookieSession)
 	writeResponse(w, "OK", http.StatusOK)
 }
 
 func (h *HandlerFuncs) RegisterHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	decoder := json.NewDecoder(r.Body)
 	var registerReq domain.UserRegData
 	err := decoder.Decode(&registerReq)
@@ -117,7 +139,59 @@ func (h *HandlerFuncs) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, "OK", http.StatusOK)
 }
 
+func (h *HandlerFuncs) VerifyHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	decoder := json.NewDecoder(r.Body)
+	var verifyReq domain.VerifyRequest
+	err := decoder.Decode(&verifyReq)
+	if err != nil {
+		errorResponse(w, err, http.StatusBadRequest)
+		return
+	}
+	cookie, err := r.Cookie("refreshToken")
+	if err != nil || len(cookie.Value) == 0 {
+		writeResponse(w, "no access", http.StatusUnauthorized)
+		return
+	}
+
+	token, err := getToken(r)
+	if err != nil || len(token) == 0 {
+		writeResponse(w, "no access", http.StatusUnauthorized)
+		return
+	}
+	claims, err := h.decodeJwt(token, true)
+	if err != nil || len(token) == 0 {
+		writeResponse(w, "no access", http.StatusUnauthorized)
+		return
+	}
+	h.service.WhitelistFingerprint(claims.Login, verifyReq.Analytics.Fingerprint)
+	h.service.WhitelistIp(claims.Login, r.RemoteAddr)
+
+	response := domain.VerifyResponse{
+		Allowed: true,
+	}
+	respBytes, err := json.Marshal(response)
+	if err != nil {
+		errorResponse(w, err, http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write(respBytes)
+}
+
+func (h *HandlerFuncs) OptionsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	writeResponse(w, "OK", http.StatusOK)
+}
+
 func (h *HandlerFuncs) AccessTokenHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	decoder := json.NewDecoder(r.Body)
 	var tokenReq domain.GetTokenRequest
 	err := decoder.Decode(&tokenReq)
@@ -147,6 +221,9 @@ func (h *HandlerFuncs) AccessTokenHandler(w http.ResponseWriter, r *http.Request
 		Email: claims.Email,
 	}
 
+	h.service.CheckFingerprint(claims.Login, tokenReq.Analytics.Fingerprint)
+	h.service.CheckIp(claims.Login, r.RemoteAddr)
+
 	refreshToken, err := h.makeToken(user, []string{"refresh"})
 	if err != nil {
 		errorResponse(w, err, http.StatusInternalServerError)
@@ -157,7 +234,7 @@ func (h *HandlerFuncs) AccessTokenHandler(w http.ResponseWriter, r *http.Request
 		errorResponse(w, err, http.StatusInternalServerError)
 		return
 	}
-	cookieSession := http.Cookie{Name: "refreshToken", Value: refreshToken, Path: "/"}
+	cookieSession := http.Cookie{Name: "refreshToken", Value: refreshToken, MaxAge: 6000, Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteNoneMode}
 	http.SetCookie(w, &cookieSession)
 	response := domain.GetTokenResponse{
 		AccessToken: accessToken,
@@ -202,6 +279,9 @@ func (h *HandlerFuncs) InternalCheckAndInvalidateTokenHandler(w http.ResponseWri
 }
 
 func (h *HandlerFuncs) ReturnHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	keys, ok := r.URL.Query()["code"]
 
 	if !ok || len(keys[0]) < 1 {
@@ -221,7 +301,7 @@ func (h *HandlerFuncs) ReturnHandler(w http.ResponseWriter, r *http.Request) {
 		errorResponse(w, err, http.StatusInternalServerError)
 		return
 	}
-	cookieSession := http.Cookie{Name: "refreshToken", Value: refreshToken, Path: "/"}
+	cookieSession := http.Cookie{Name: "refreshToken", Value: refreshToken, MaxAge: 6000, Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteNoneMode}
 	http.SetCookie(w, &cookieSession)
 	cookie, err := r.Cookie("redirectUri")
 	if err != nil {
@@ -299,8 +379,7 @@ func (h *HandlerFuncs) decodeJwt(jwtToken string, invalidate bool) (*domain.Clai
 	}
 	var checked bool
 	if invalidate {
-		checked, err = h.service.CheckUserSession(claims.Login, claims.Session)
-		//checked, err = h.service.CheckAndInvalidateUserSession(claims.Login, claims.Session)
+		checked, err = h.service.CheckAndInvalidateUserSession(claims.Login, claims.Session)
 		if !checked {
 		//	_ = h.service.InvalidateAllUserSessions(claims.Login)
 		}

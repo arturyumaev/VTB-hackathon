@@ -13,19 +13,22 @@ import (
 
 type HandlerFuncs struct {
 	service *service.Service
-	jwtKey string
+	jwtKey  string
 	logger  *zerolog.Logger
 }
 
 func NewHandlerFunc(service *service.Service, jwtKey string, logger *zerolog.Logger) *HandlerFuncs {
 	return &HandlerFuncs{
 		service: service,
-		jwtKey: jwtKey,
+		jwtKey:  jwtKey,
 		logger:  logger,
 	}
 }
 
 func (h *HandlerFuncs) BalanceHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	token, err := getToken(r)
 	if err != nil {
 		errorResponse(w, err, http.StatusUnauthorized)
@@ -54,6 +57,9 @@ func (h *HandlerFuncs) BalanceHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HandlerFuncs) PayHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	token, err := getToken(r)
 	if err != nil {
 		errorResponse(w, err, http.StatusUnauthorized)
@@ -83,7 +89,17 @@ func (h *HandlerFuncs) PayHandler(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, "OK", http.StatusOK)
 }
 
+func (h *HandlerFuncs) OptionsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	writeResponse(w, "OK", http.StatusOK)
+}
+
 func (h *HandlerFuncs) AddMoneyHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	token, err := getToken(r)
 	if err != nil {
 		errorResponse(w, err, http.StatusUnauthorized)

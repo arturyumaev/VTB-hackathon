@@ -18,7 +18,7 @@ type ConfigServer struct {
 }
 
 type ConfigAuth struct {
-	TokenUrl string `env:"PAYMENT_AUTH_TOKEN_URL" envDefault:"http://127.0.0.1:8080/auth/internal/token"`
+	TokenUrl string `env:"PAYMENT_AUTH_TOKEN_URL" envDefault:"https://127.0.0.1:8080/auth/internal/token"`
 	Secret string `env:"PAYMENT_AUTH_SECRET" envDefault:"secret"`
 	JwtKey string `env:"PAYMENT_AUTH_JWT_KEY" envDefault:"jwtKey"`
 }

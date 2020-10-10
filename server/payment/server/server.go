@@ -61,7 +61,9 @@ func InitHttpServer(config config.Config) (*HttpServer, error) {
 func (h *HttpServer) StartWebServer() {
 	go func() {
 		h.logger.Info().Msg("Start web server")
-		_ = h.server.ListenAndServe()
+		h.server.ListenAndServeTLS( "/root/cert.pem", "/root/key.pem")
+
+		//_ = h.server.ListenAndServe()
 	}()
 
 	c := make(chan os.Signal, 1)

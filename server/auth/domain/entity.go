@@ -48,8 +48,28 @@ type UserRegData struct {
 	Type string `json:"-" bson:"type"`
 }
 
+type VerifyRequest struct {
+	Code string `json:"code"`
+	Analytics AnalyticsReq `json:"analytics"`
+}
+
+type VerifyResponse struct {
+	Allowed bool `json:"allowed"`
+}
+
 type GetTokenRequest struct {
 	Scope []string `json:"scope"`
+	Analytics AnalyticsReq `json:"analytics"`
+}
+
+type AnalyticsData struct {
+	Fingerprints []string `json:"fingerprints" bson:"fingerprints"`
+	Login   string `json:"login" bson:"login"`
+	Ips []string `json:"ips" bson:"ips"`
+}
+
+type AnalyticsReq struct {
+	Fingerprint string `json:"fingerprint"`
 }
 
 type GetTokenResponse struct {
@@ -69,6 +89,11 @@ type TokenResponse struct {
 type LoginRequest struct {
 	Login   string `json:"login" bson:"login"`
 	Password    string `json:"password" bson:"password"`
+}
+
+type IpRange struct {
+	Start   uint32 `json:"ipStart" bson:"ipStart"`
+	End    uint32 `json:"ipEnd" bson:"ipEnd"`
 }
 
 type Session struct {

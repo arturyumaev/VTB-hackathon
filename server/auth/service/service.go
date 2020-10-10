@@ -46,6 +46,22 @@ func (s *Service) InvalidateAllUserSessions(login string) error {
 	return s.mongo.InvalidateAllUserSessions(login)
 }
 
+func (s *Service) CheckFingerprint(login string, fingerprint string) bool {
+	return s.mongo.CheckFingerprint(login, fingerprint)
+}
+
+func (s *Service) CheckIp(login string, ip string) bool {
+	return s.mongo.CheckIp(login, ip)
+}
+
+func (s *Service) WhitelistFingerprint(login string, fingerprint string) error {
+	return s.mongo.WhitelistFingerprint(login, fingerprint)
+}
+
+func (s *Service) WhitelistIp(login string, ip string) error {
+	return s.mongo.WhitelistIp(login, ip)
+}
+
 func (s *Service) GenerateAndSaveUserSession(login string) (string, error) {
 	random, err := uuid.NewV4()
 	if err != nil {
