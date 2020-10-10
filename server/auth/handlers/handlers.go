@@ -170,7 +170,7 @@ func (h *HandlerFuncs) VerifyHandler(w http.ResponseWriter, r *http.Request) {
 	h.service.WhitelistIp(claims.Login, r.RemoteAddr)
 
 	response := domain.VerifyResponse{
-		Allowed: true,
+		Allowed: true,  // check email code not required in this task
 	}
 	respBytes, err := json.Marshal(response)
 	if err != nil {
