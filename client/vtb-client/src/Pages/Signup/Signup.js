@@ -94,7 +94,7 @@ export const Signup = () => {
             
             {/* Имя */}
             <Form.Item
-              name="firstname"
+              name="name"
               rules={[
                 { type: 'string', message: 'Введенное имя некорректное!', },
                 { required: true, message: 'Введите имя!',},
