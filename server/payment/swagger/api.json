@@ -1,0 +1,248 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Payment documentation",
+    "description": "Документация к сервису payment",
+    "contact": {
+      "name": "Евгений Шахов",
+      "email": "jen9471@yandex.ru"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version": "1.0.0"
+  },
+  "tags": [
+    {
+      "name": "payment",
+      "description": "Операции auth"
+    }
+  ],
+  "paths": {
+    "/auth/balance": {
+      "get": {
+        "tags": [
+          "payment"
+        ],
+        "summary": "Получение баланса",
+        "operationId": "GetBalance",
+        "responses": {
+          "200": {
+            "description": "Всё прошло успешно, информация получена",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BalanceSchema"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверно сформирован запрос",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Неверный accessToken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутреннаяя ошибка сервера",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/pay": {
+      "post": {
+        "tags": [
+          "payment"
+        ],
+        "summary": "Платеж",
+        "operationId": "Pay",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PayReqSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Всё прошло успешно, платеж совершен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultResponseSchema"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверно сформирован запрос",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Неверный accessToken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутреннаяя ошибка сервера",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/addMoney": {
+      "post": {
+        "tags": [
+          "payment"
+        ],
+        "summary": "Регистрация нового пользователя",
+        "operationId": "Register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddMoneyReqSchema"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Всё прошло успешно, деньги зачислены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DefaultResponseSchema"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверно сформирован запрос",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Неверный accessToken",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Внутреннаяя ошибка сервера",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ErrorResponse": {
+        "required": [
+          "error"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "some error messages"
+          }
+        }
+      },
+      "BalanceSchema": {
+        "type": "object",
+        "properties": {
+          "balance": {
+            "type": "integer"
+          }
+        }
+      },
+      "PayReqSchema": {
+        "type": "object",
+        "properties": {
+          "addressee": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          }
+        }
+      },
+      "AddMoneyReqSchema": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "integer"
+          }
+        }
+      },
+      "DefaultResponseSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
