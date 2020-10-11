@@ -35,9 +35,7 @@ func NewHandlerFunc(service *service.Service, jwtKey string, internalSecret stri
 }
 
 func (h *HandlerFuncs) ProfileHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	setCors(&w)
 	var cookie, err = r.Cookie("refreshToken")
 	if err != nil || len(cookie.Value) == 0 {
 		writeResponse(w, "no auth", http.StatusUnauthorized)
@@ -68,9 +66,7 @@ func (h *HandlerFuncs) ProfileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HandlerFuncs) LoginYandexHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	setCors(&w)
 	data := url.Values{}
 	data.Set("response_type", "code")
 	data.Set("client_id", h.yandexClientId)
@@ -85,9 +81,7 @@ func (h *HandlerFuncs) LoginYandexHandler(w http.ResponseWriter, r *http.Request
 }
 
 func (h *HandlerFuncs) LoginSelfHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	setCors(&w)
 	decoder := json.NewDecoder(r.Body)
 	var loginReq domain.LoginRequest
 	err := decoder.Decode(&loginReq)
@@ -111,9 +105,7 @@ func (h *HandlerFuncs) LoginSelfHandler(w http.ResponseWriter, r *http.Request) 
 }
 
 func (h *HandlerFuncs) LogoutHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	setCors(&w)
 
 	cookieSession := http.Cookie{Name: "refreshToken", Value: "", MaxAge: 0, Path: "/", Secure: true, HttpOnly: true, SameSite: http.SameSiteNoneMode}
 	http.SetCookie(w, &cookieSession)
@@ -121,9 +113,7 @@ func (h *HandlerFuncs) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HandlerFuncs) RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	setCors(&w)
 	decoder := json.NewDecoder(r.Body)
 	var registerReq domain.UserRegData
 	err := decoder.Decode(&registerReq)
@@ -140,9 +130,7 @@ func (h *HandlerFuncs) RegisterHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HandlerFuncs) VerifyHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	setCors(&w)
 	decoder := json.NewDecoder(r.Body)
 	var verifyReq domain.VerifyRequest
 	err := decoder.Decode(&verifyReq)
@@ -182,16 +170,12 @@ func (h *HandlerFuncs) VerifyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HandlerFuncs) OptionsHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	setCors(&w)
 	writeResponse(w, "OK", http.StatusOK)
 }
 
 func (h *HandlerFuncs) AccessTokenHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	setCors(&w)
 	decoder := json.NewDecoder(r.Body)
 	var tokenReq domain.GetTokenRequest
 	err := decoder.Decode(&tokenReq)
@@ -284,9 +268,7 @@ func (h *HandlerFuncs) InternalCheckAndInvalidateTokenHandler(w http.ResponseWri
 }
 
 func (h *HandlerFuncs) ReturnHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
-	w.Header().Set("Access-Control-Allow-Credentials", "true")
+	setCors(&w)
 	keys, ok := r.URL.Query()["code"]
 
 	if !ok || len(keys[0]) < 1 {
@@ -416,4 +398,10 @@ func contains(s []string, e []string) bool {
 		}
 	}
 	return len(both) == len(e)
+}
+
+func setCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	(*w).Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+	(*w).Header().Set("Access-Control-Allow-Credentials", "true")
 }
