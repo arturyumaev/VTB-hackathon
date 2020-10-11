@@ -1,10 +1,12 @@
 ## Backend
-auth - our solution
+auth - our protect solution
 
-payment - protected API
+payment - "protected" API
 
+## Swagger
 see swagger files
 
+## Run
 go build .
 
 ./auth
