@@ -149,7 +149,7 @@ func (h *HandlerFuncs) VerifyHandler(w http.ResponseWriter, r *http.Request) {
 		writeResponse(w, "no access", http.StatusUnauthorized)
 		return
 	}
-	claims, err := h.decodeJwt(token, true)
+	claims, err := h.decodeJwt(token, false)
 	if err != nil || len(token) == 0 {
 		writeResponse(w, "no access", http.StatusUnauthorized)
 		return
