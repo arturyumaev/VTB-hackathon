@@ -1,7 +1,7 @@
 ## Backend
 auth - our protect solution
 
-payment - "protected" API
+payment - our "protected" API
 
 ## Swagger
 see swagger files
