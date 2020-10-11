@@ -210,7 +210,7 @@ func (h *HandlerFuncs) AccessTokenHandler(w http.ResponseWriter, r *http.Request
 		writeResponse(w, "no access", http.StatusUnauthorized)
 		return
 	}
-	claims, err := h.decodeJwt(token, true)
+	claims, err := h.decodeJwt(token, false)
 	if err != nil || len(token) == 0 {
 		writeResponse(w, "no access", http.StatusUnauthorized)
 		return
@@ -221,9 +221,14 @@ func (h *HandlerFuncs) AccessTokenHandler(w http.ResponseWriter, r *http.Request
 		Email: claims.Email,
 	}
 
-	h.service.CheckFingerprint(claims.Login, tokenReq.Analytics.Fingerprint)
-	h.service.CheckIp(claims.Login, r.RemoteAddr)
+	fingerprintOk := h.service.CheckFingerprint(claims.Login, tokenReq.Analytics.Fingerprint)
+	ipOk := h.service.CheckIp(claims.Login, r.RemoteAddr)
 
+	if !fingerprintOk && !ipOk {
+		errorResponse(w, errors.New("verify first"), http.StatusForbidden)
+		return
+	}
+	_, _ = h.decodeJwt(token, true)
 	refreshToken, err := h.makeToken(user, []string{"refresh"})
 	if err != nil {
 		errorResponse(w, err, http.StatusInternalServerError)

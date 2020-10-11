@@ -16,6 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"net"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -161,6 +162,7 @@ func (m *MongoDB) CheckFingerprint(login string, fingerprint string) bool {
 	if err != nil || exists == 0 {
 		analyticData := domain.AnalyticsData{
 			Login: login,
+			Ips: []string{""},
 			Fingerprints: []string{fingerprint},
 		}
 		if _, err := collection.InsertOne(context.TODO(), analyticData); err != nil {
@@ -170,6 +172,11 @@ func (m *MongoDB) CheckFingerprint(login string, fingerprint string) bool {
 	var analyticData domain.AnalyticsData
 	if err := collection.FindOne(context.Background(), bson.M{"login": login}).Decode(&analyticData); err != nil {
 		return false
+	}
+	if len(analyticData.Fingerprints) == 0 {
+		collection.UpdateOne(context.TODO(), bson.M{"login": login},
+			bson.M{"$push": bson.M{"fingerprints": fingerprint}})
+		return true
 	}
 	if contains(analyticData.Fingerprints, fingerprint) {
 		return true
@@ -183,6 +190,7 @@ func (m *MongoDB) WhitelistFingerprint(login string, fingerprint string) error {
 	if err != nil || exists == 0 {
 		analyticData := domain.AnalyticsData{
 			Login: login,
+			Ips: []string{""},
 			Fingerprints: []string{fingerprint},
 		}
 		if _, err := collection.InsertOne(context.TODO(), analyticData); err != nil {
@@ -204,6 +212,7 @@ func (m *MongoDB) CheckIp(login string, ip string) bool {
 		analyticData := domain.AnalyticsData{
 			Login: login,
 			Ips: []string{iprange},
+			Fingerprints: []string{""},
 		}
 		if _, err := collection.InsertOne(context.TODO(), analyticData); err != nil {
 			return true
@@ -212,6 +221,11 @@ func (m *MongoDB) CheckIp(login string, ip string) bool {
 	var analyticData domain.AnalyticsData
 	if err := collection.FindOne(context.Background(), bson.M{"login": login}).Decode(&analyticData); err != nil {
 		return false
+	}
+	if len(analyticData.Ips) == 0 {
+		collection.UpdateOne(context.TODO(), bson.M{"login": login},
+			bson.M{"$push": bson.M{"ips": iprange}})
+		return true
 	}
 	if contains(analyticData.Ips, iprange) {
 		return true
@@ -227,6 +241,7 @@ func (m *MongoDB) WhitelistIp(login string, ip string) error {
 		analyticData := domain.AnalyticsData{
 			Login: login,
 			Ips: []string{iprange},
+			Fingerprints: []string{""},
 		}
 		if _, err := collection.InsertOne(context.TODO(), analyticData); err != nil {
 			return err
@@ -252,6 +267,7 @@ func (m *MongoDB) IpToIpRange(ip string) string {
 }
 
 func ip2Long(ip string) uint32 {
+	ip = strings.Split(ip, ":")[0]
 	var long uint32
 	binary.Read(bytes.NewBuffer(net.ParseIP(ip).To4()), binary.BigEndian, &long)
 	return long
